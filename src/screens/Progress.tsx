@@ -216,7 +216,12 @@ function ExercisesView({ units }: { units: "kg" | "lb" }) {
         return { ex: e!, latest: p[p.length - 1], first: p[0], count: p.length };
       }),
     );
-    return rows.filter((r) => r.latest).sort((a, b) => (a.latest!.date < b.latest!.date ? 1 : -1));
+    const logged = rows.filter((r) => r.latest).sort((a, b) => (a.latest!.date < b.latest!.date ? 1 : -1));
+    // Exercises in your program that have no sets yet, so every lift is reachable.
+    const seen = new Set(logged.map((r) => r.ex.id));
+    const planned = [...new Set((await db.templates.toArray()).flatMap((t) => t.items.map((i) => i.exerciseId)))].filter((id) => !seen.has(id));
+    const unlogged = ((await db.exercises.bulkGet(planned)).filter(Boolean) as NonNullable<(typeof exercises)[number]>[]).map((ex) => ({ ex, latest: undefined, first: undefined, count: 0 }));
+    return [...logged, ...unlogged.sort((a, b) => a.ex.name.localeCompare(b.ex.name))];
   }, []);
   if (!data) return <Loading />;
   const list = data.filter((r) => r.ex.name.toLowerCase().includes(q.toLowerCase()));
@@ -224,9 +229,19 @@ function ExercisesView({ units }: { units: "kg" | "lb" }) {
     <>
       {data.length > 4 && <input className="input" placeholder="Search exercises" aria-label="Search exercises" value={q} onChange={(e) => setQ(e.target.value)} style={{ marginBottom: 12 }} />}
       <div className="card list">
-        {data.length === 0 && <div className="empty">Finish a workout to see progress for each exercise here.</div>}
+        {data.length === 0 && <div className="empty">Tick off a set in a workout to see a weight graph for that exercise here.</div>}
         {list.map(({ ex, latest, first, count }) => {
           const diff = count > 1 ? toDisplay(latest!.topWeight - first!.topWeight, units)! : null;
+          if (!latest)
+            return (
+              <Link key={ex.id} to={`/progress/exercise/${ex.id}`} className="list-item" style={{ color: "inherit", textDecoration: "none" }}>
+                <div className="grow">
+                  <div style={{ fontWeight: 600 }}>{ex.name}</div>
+                  <div className="faint">No sets logged yet</div>
+                </div>
+                <Icon name="chevron" size={18} />
+              </Link>
+            );
           return (
             <Link key={ex.id} to={`/progress/exercise/${ex.id}`} className="list-item" style={{ color: "inherit", textDecoration: "none" }}>
               <div className="grow">

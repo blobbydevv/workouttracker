@@ -152,6 +152,7 @@ export default function Session() {
                         <Icon name="timer" />
                       </button>
                     )}
+                    <Link className="icon-btn" to={`/progress/exercise/${it.exerciseId}`} aria-label={`Progress graph for ${it.exerciseName}`}><Icon name="chart" /></Link>
                     <button className="icon-btn" aria-label={`Options for ${it.exerciseName}`} onClick={() => setItemMenu(it)}><Icon name="more" /></button>
                   </div>
                   {cue && cue.kind !== "none" && <div className="cue" role="note"><Icon name="chart" size={14} />{cue.label}</div>}

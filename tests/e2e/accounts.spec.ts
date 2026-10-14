@@ -140,3 +140,25 @@ test("exercise progress graphs show weight and reps over time with exact values 
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByRole("status").filter({ hasText: "67.5 kg" })).toBeVisible();
 });
+
+test("graphs are reachable from the workout screen and Lifts lists every planned exercise", async ({ page }) => {
+  await signUp(page);
+  await quickOnboard(page, "Alex");
+  await tab(page, "Progress").click();
+  await expect(page.getByText("No sets logged yet").first()).toBeVisible(); // planned lifts listed before any data
+
+  await tab(page, "Workout").click();
+  const row = page.locator(`[data-date="${localISO()}"]`);
+  if (await row.getByText("Rest", { exact: true }).isVisible()) {
+    await row.getByText("Tap to add a workout").click();
+    await page.getByRole("dialog").locator(".list-item").first().click();
+  }
+  await row.locator("button.grow").click();
+  await page.getByLabel("Set 1 weight").first().fill("50");
+  await page.getByLabel("Set 1 weight").first().blur();
+  await page.getByLabel("Set 1 reps").first().fill("10");
+  await page.getByLabel("Set 1 reps").first().blur();
+  await page.getByLabel("Complete set 1").first().click();
+  await page.getByRole("link", { name: /^Progress graph for / }).first().click();
+  await expect(page.getByRole("img", { name: /Top set weight/ })).toHaveAttribute("aria-label", /1 workout, latest 50 kg/);
+});

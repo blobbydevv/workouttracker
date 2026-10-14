@@ -54,7 +54,12 @@ export default function ExerciseHistory() {
         <div className="row between"><span>Most reps</span><strong>{pr.mostReps ? `${pr.mostReps.reps} @ ${w(pr.mostReps.weight)}` : "–"}</strong></div>
         <p className="faint">Estimated 1RM uses the Epley formula for display only.</p>
       </section>
-      {data.rows.length === 0 && <div className="empty">No completed sets for this exercise yet.</div>}
+      {data.rows.length === 0 && (
+        <section className="card empty">
+          <strong>No sets logged yet</strong>
+          <p className="faint">Tick off a set of this exercise in a workout. Your weight and reps graphs appear here straight away.</p>
+        </section>
+      )}
       {data.rows.length > 0 && <h2 className="section-title">History</h2>}
       {data.rows.map((r) => (
         <section key={r.session.id} className="card">
