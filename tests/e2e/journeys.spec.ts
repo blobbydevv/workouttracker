@@ -45,6 +45,8 @@ async function startTodaysWorkout(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
+  // Newer Chrome returns Promises from scroll methods; emulate it on every run.
+  await page.addInitScript(`for (const [o, m] of [[window, "scrollTo"], [window, "scroll"], [window, "scrollBy"], [Element.prototype, "scrollIntoView"], [Element.prototype, "scrollTo"]]) { const f = o[m]; o[m] = function (...a) { f.apply(this, a); return Promise.resolve(); }; }`);
   // HOSTILE_HISTORY=1 reruns every journey under a throwing history wrapper (as Netlify's toolbar injects).
   if (process.env.HOSTILE_HISTORY)
     await page.addInitScript(`let l; for (const m of ["pushState","replaceState"]) { const o = history[m]; history[m] = function (...a) { const r = o.apply(this, a); l(m, a); return r; }; }`);

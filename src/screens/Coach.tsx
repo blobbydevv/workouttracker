@@ -56,7 +56,9 @@ export default function Coach() {
   }, [chats]);
   const messages = useLiveQuery(async () => (chatId ? (await db.chatMessages.where("chatId").equals(chatId).sortBy("createdAt")) : []), [chatId]);
   const ctx = useLiveQuery(buildContext, []);
-  useEffect(() => endRef.current?.scrollIntoView({ block: "end" }), [messages?.length, busy]);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end" });
+  }, [messages?.length, busy]);
 
   if (!profile || !chats || !messages) return <Loading />;
 

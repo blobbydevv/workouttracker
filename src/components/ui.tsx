@@ -105,7 +105,9 @@ export function useOnline(): boolean {
 
 export function NumberInput({ value, onChange, step = 1, min = 0, label, placeholder, inputMode = "decimal" }: { value: number | null; onChange: (v: number | null) => void; step?: number; min?: number; label: string; placeholder?: string; inputMode?: "decimal" | "numeric" }) {
   const [text, setText] = useState(value == null ? "" : String(value));
-  useEffect(() => setText(value == null ? "" : String(value)), [value]);
+  useEffect(() => {
+    setText(value == null ? "" : String(value));
+  }, [value]);
   return (
     <input
       aria-label={label}
@@ -133,6 +135,8 @@ export const fmt = (n: number | null | undefined, d = 0) => (n == null || !Numbe
 /** Checkbox with optimistic local state, for settings persisted asynchronously. */
 export function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   const [v, setV] = useState(checked);
-  useEffect(() => setV(checked), [checked]);
+  useEffect(() => {
+    setV(checked);
+  }, [checked]);
   return <input type="checkbox" checked={v} style={{ width: 22, height: 22 }} onChange={(e) => { setV(e.target.checked); onChange(e.target.checked); }} />;
 }

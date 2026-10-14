@@ -36,7 +36,11 @@ export default function App() {
   const profile = useProfile();
   const loc = useLocation();
   const online = useOnline();
-  useEffect(() => window.scrollTo(0, 0), [loc.pathname]);
+  // Braces matter: newer Chrome returns a Promise from scrollTo, and React
+  // would call any returned value as a cleanup function ("l is not a function").
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [loc.pathname]);
 
   if (profile === undefined) return <Loading />;
   if (profile === null && loc.pathname !== "/onboarding") return <Navigate to="/onboarding" replace />;
