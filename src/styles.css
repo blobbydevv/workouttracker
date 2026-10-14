@@ -294,3 +294,6 @@ video.scanner { width: 100%; border-radius: var(--radius); background: #000; asp
 .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .stat-row > div { background: var(--surface-2); border-radius: 10px; padding: 10px; }
 .stat-row b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
+.ex-thumb { flex: none; padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: var(--surface-2); }
+.ex-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ex-hero { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: var(--radius); margin-bottom: 12px; background: var(--surface-2); display: block; }

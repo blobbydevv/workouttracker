@@ -2,6 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ProgressChart } from "../components/ProgressChart";
+import { ExerciseHero } from "../components/ExerciseImage";
 import { Header, Loading, NumberInput, Segmented, Sheet, fmt } from "../components/ui";
 import { db } from "../db/db";
 import type { SetRecord } from "../db/types";
@@ -31,6 +32,7 @@ export default function ExerciseHistory() {
   return (
     <div className="screen">
       <Header title={data.ex?.name ?? "Exercise"} back />
+      {data.ex && <ExerciseHero id={data.ex.id} name={data.ex.name} />}
       {data.rows.length > 0 && (
         <>
           <Segmented label="Time range" value={range} onChange={setRange} options={[["1m", "1M"], ["3m", "3M"], ["6m", "6M"], ["1y", "1Y"], ["all", "All"]]} />

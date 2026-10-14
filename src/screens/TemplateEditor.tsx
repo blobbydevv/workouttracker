@@ -2,6 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { ExercisePicker } from "../components/ExercisePicker";
+import { ExerciseThumb } from "../components/ExerciseImage";
 import { Icon } from "../components/Icon";
 import { Header, Loading, NumberInput, Sheet } from "../components/ui";
 import { db, uid } from "../db/db";
@@ -36,6 +37,7 @@ export default function TemplateEditor() {
           {g.supersetId && g.items.length > 1 && <div className="faint" style={{ padding: "8px 12px 0" }}>Superset</div>}
           {g.items.map((it) => (
             <div key={it.id} className="ex-head">
+              <ExerciseThumb id={it.exerciseId} name={name(it)} size={44} />
               <div className="grow">
                 <h4>{name(it)}</h4>
                 <div className="faint">{it.sets} sets · {it.repMin}–{it.repMax} reps</div>

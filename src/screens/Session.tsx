@@ -2,6 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ExercisePicker } from "../components/ExercisePicker";
+import { ExerciseThumb } from "../components/ExerciseImage";
 import { Icon } from "../components/Icon";
 import { Confirm, Loading, NumberInput, Sheet, Unverified, fmt } from "../components/ui";
 import { db } from "../db/db";
@@ -143,6 +144,7 @@ export default function Session() {
               return (
                 <div key={it.id} style={{ paddingBottom: 8 }}>
                   <div className="ex-head">
+                    <ExerciseThumb id={it.exerciseId} name={it.exerciseName} />
                     <div className="grow">
                       <h4>{it.exerciseName}</h4>
                       <div className="faint">{it.repMin}–{it.repMax} reps</div>
