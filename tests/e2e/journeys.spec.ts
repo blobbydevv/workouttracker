@@ -45,6 +45,9 @@ async function startTodaysWorkout(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
+  // HOSTILE_HISTORY=1 reruns every journey under a throwing history wrapper (as Netlify's toolbar injects).
+  if (process.env.HOSTILE_HISTORY)
+    await page.addInitScript(`let l; for (const m of ["pushState","replaceState"]) { const o = history[m]; history[m] = function (...a) { const r = o.apply(this, a); l(m, a); return r; }; }`);
   await page.goto("/");
   await page.evaluate(() => new Promise<void>((r) => { const req = indexedDB.deleteDatabase("tracker"); req.onsuccess = req.onerror = req.onblocked = () => r(); }));
 });

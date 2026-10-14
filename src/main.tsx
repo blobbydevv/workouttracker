@@ -6,6 +6,9 @@ import "./styles.css";
 import { ErrorBoundary, Fatal } from "./components/ErrorBoundary";
 import { ensureSeeded } from "./domain/onboarding";
 import { applyTheme } from "./screens/Profile";
+import { installHistoryGuard } from "./lib/historyGuard";
+
+installHistoryGuard();
 
 try {
   const t = localStorage.getItem("theme");
