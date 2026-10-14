@@ -18,7 +18,7 @@ export function Fatal({ message }: { message: string }) {
       <h1 style={{ fontSize: 22 }}>Something went wrong</h1>
       <div className="notice error" role="alert" style={{ wordBreak: "break-word" }}>{message}</div>
       <p className="muted">Your data is stored on this device and hasn't been deleted.</p>
-      <button className="btn block" onClick={() => location.assign("/")}>Reload app</button>
+      <button className="btn block" onClick={() => location.assign(import.meta.env.BASE_URL)}>Reload app</button>
     </div>
   );
 }

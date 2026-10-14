@@ -24,6 +24,13 @@ npm run e2e          # journey tests (Playwright, 390×844)
 AI features (the coach, meal-photo and text food estimates) need `ANTHROPIC_API_KEY` set
 for `npm start`. Without it, the app shows a "not configured" state.
 
+## Deploy to GitHub Pages
+
+`.github/workflows/pages.yml` builds and publishes on every push to `main` or
+`claude/hopeful-einstein-4n1gtd`. One-time setup: **Settings → Pages → Build and deployment
+→ Source: GitHub Actions**. The site appears at `https://<user>.github.io/<repo>/`. Pages
+can't run the AI server, so the coach and food estimates show "not available" there.
+
 ## Deploy to Netlify
 
 `netlify.toml` sets everything: build `npm run build`, publish `dist`, and Node 22.

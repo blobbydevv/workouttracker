@@ -144,7 +144,7 @@ export default function Profile() {
         <button className="btn block danger" style={{ marginTop: 8 }} onClick={() => setWipe(true)}>Delete all data on this device</button>
         <p className="faint">Development control. Not part of the reference app: its support site says progress can't be reset.</p>
       </section>
-      <Confirm open={wipe} title="Delete everything?" body="This erases all workouts, food logs, weigh-ins, photos and chats on this device." confirmLabel="Delete all data" danger onClose={() => setWipe(false)} onConfirm={async () => { await db.delete(); location.href = "/"; }} />
+      <Confirm open={wipe} title="Delete everything?" body="This erases all workouts, food logs, weigh-ins, photos and chats on this device." confirmLabel="Delete all data" danger onClose={() => setWipe(false)} onConfirm={async () => { await db.delete(); location.href = import.meta.env.BASE_URL; }} />
     </div>
   );
 }

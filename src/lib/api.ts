@@ -17,7 +17,7 @@ async function post<T>(path: string, body: unknown, signal?: AbortSignal): Promi
   if (!navigator.onLine) throw new ApiError("You're offline. Connect to use AI features.", "offline");
   let res: Response;
   try {
-    res = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal });
+    res = await fetch(`${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal });
   } catch (e) {
     if ((e as Error).name === "AbortError") throw e;
     throw new ApiError("Couldn't reach the AI service. Check that the app server is running.", "unreachable");

@@ -24,7 +24,7 @@ ensureSeeded()
     root.render(
       <StrictMode>
         <ErrorBoundary>
-          <BrowserRouter>
+          <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <App />
           </BrowserRouter>
         </ErrorBoundary>
@@ -38,7 +38,7 @@ ensureSeeded()
   });
 
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
-  navigator.serviceWorker.register("/sw.js").catch(() => {
+  navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {
     /* offline shell unavailable; app still works online */
   });
 }
