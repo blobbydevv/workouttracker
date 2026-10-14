@@ -7,6 +7,8 @@ import { ErrorBoundary, Fatal } from "./components/ErrorBoundary";
 import { ensureSeeded } from "./domain/onboarding";
 import { applyTheme } from "./screens/Profile";
 import { installHistoryGuard } from "./lib/historyGuard";
+import "./sync"; // installs change tracking before anything writes to the database
+import { AccountGate } from "./sync/AccountGate";
 
 installHistoryGuard();
 
@@ -24,9 +26,11 @@ ensureSeeded()
     root.render(
       <StrictMode>
         <ErrorBoundary>
-          <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <App />
-          </BrowserRouter>
+          <AccountGate>
+            <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <App />
+            </BrowserRouter>
+          </AccountGate>
         </ErrorBoundary>
       </StrictMode>,
     ),

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon";
 
@@ -105,8 +105,11 @@ export function useOnline(): boolean {
 
 export function NumberInput({ value, onChange, step = 1, min = 0, label, placeholder, inputMode = "decimal" }: { value: number | null; onChange: (v: number | null) => void; step?: number; min?: number; label: string; placeholder?: string; inputMode?: "decimal" | "numeric" }) {
   const [text, setText] = useState(value == null ? "" : String(value));
+  // While the user is editing, background updates (live queries, sync, async
+  // prefill) must not overwrite what they're typing.
+  const editing = useRef(false);
   useEffect(() => {
-    setText(value == null ? "" : String(value));
+    if (!editing.current) setText(value == null ? "" : String(value));
   }, [value]);
   return (
     <input
@@ -119,9 +122,11 @@ export function NumberInput({ value, onChange, step = 1, min = 0, label, placeho
       onChange={(e) => {
         const t = e.target.value.replace(",", ".");
         if (!/^\d*\.?\d*$/.test(t)) return;
+        editing.current = true;
         setText(t);
       }}
       onBlur={() => {
+        editing.current = false;
         const n = text === "" ? null : Math.max(min, Number(text));
         onChange(n != null && Number.isFinite(n) ? n : null);
       }}

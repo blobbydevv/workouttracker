@@ -11,20 +11,22 @@ import { addDays, longDate, today } from "../domain/dates";
 import { currentTarget } from "../domain/checkin";
 import { sumEntries } from "../domain/nutrition";
 import { toDisplay, useProfile } from "../lib/hooks";
+import { exerciseHistory, exerciseProgress } from "../domain/workout";
 
-type Tab = "weight" | "workouts" | "nutrition" | "steps" | "photos";
+type Tab = "exercises" | "weight" | "workouts" | "nutrition" | "steps" | "photos";
 
 export default function Progress() {
   const profile = useProfile();
   const [params, setParams] = useSearchParams();
-  const tab = (params.get("tab") as Tab) ?? "weight";
+  const tab = (params.get("tab") as Tab) ?? "exercises";
   const setTab = (t: Tab) => setParams({ tab: t }, { replace: true });
   if (!profile) return <Loading />;
   return (
     <div className="screen">
       <header className="header"><h1>Progress</h1></header>
-      <Segmented label="Progress view" value={tab} onChange={setTab} options={[["weight", "Weight"], ["workouts", "Workouts"], ["nutrition", "Nutrition"], ["steps", "Steps"], ["photos", "Photos"]]} />
+      <Segmented label="Progress view" value={tab} onChange={setTab} options={[["exercises", "Lifts"], ["weight", "Weight"], ["workouts", "Workouts"], ["nutrition", "Food"], ["steps", "Steps"], ["photos", "Photos"]]} />
       <div style={{ height: 12 }} />
+      {tab === "exercises" && <ExercisesView units={profile.units} />}
       {tab === "weight" && <WeightView units={profile.units} />}
       {tab === "workouts" && <WorkoutsView units={profile.units} />}
       {tab === "nutrition" && <NutritionView />}
@@ -198,6 +200,48 @@ function PhotosView() {
           </>
         )}
       </Sheet>
+    </>
+  );
+}
+
+function ExercisesView({ units }: { units: "kg" | "lb" }) {
+  const [q, setQ] = useState("");
+  const data = useLiveQuery(async () => {
+    const done = (await db.sets.toArray()).filter((s) => s.done);
+    const ids = [...new Set(done.map((s) => s.exerciseId))];
+    const exercises = (await db.exercises.bulkGet(ids)).filter(Boolean);
+    const rows = await Promise.all(
+      exercises.map(async (e) => {
+        const p = exerciseProgress(await exerciseHistory(e!.id));
+        return { ex: e!, latest: p[p.length - 1], first: p[0], count: p.length };
+      }),
+    );
+    return rows.filter((r) => r.latest).sort((a, b) => (a.latest!.date < b.latest!.date ? 1 : -1));
+  }, []);
+  if (!data) return <Loading />;
+  const list = data.filter((r) => r.ex.name.toLowerCase().includes(q.toLowerCase()));
+  return (
+    <>
+      {data.length > 4 && <input className="input" placeholder="Search exercises" aria-label="Search exercises" value={q} onChange={(e) => setQ(e.target.value)} style={{ marginBottom: 12 }} />}
+      <div className="card list">
+        {data.length === 0 && <div className="empty">Finish a workout to see progress for each exercise here.</div>}
+        {list.map(({ ex, latest, first, count }) => {
+          const diff = count > 1 ? toDisplay(latest!.topWeight - first!.topWeight, units)! : null;
+          return (
+            <Link key={ex.id} to={`/progress/exercise/${ex.id}`} className="list-item" style={{ color: "inherit", textDecoration: "none" }}>
+              <div className="grow">
+                <div style={{ fontWeight: 600 }}>{ex.name}</div>
+                <div className="faint">{count} workout{count === 1 ? "" : "s"} · last {longDate(latest!.date)}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontWeight: 700 }}>{fmt(toDisplay(latest!.topWeight, units), 1)} {units} × {latest!.topReps}</div>
+                {diff != null && <div className="faint">{diff > 0 ? "▲ +" : diff < 0 ? "▼ " : ""}{fmt(diff, 1)} {units}</div>}
+              </div>
+              <Icon name="chevron" size={18} />
+            </Link>
+          );
+        })}
+      </div>
     </>
   );
 }

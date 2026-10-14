@@ -24,6 +24,28 @@ npm run e2e          # journey tests (Playwright, 390×844)
 AI features (the coach, meal-photo and text food estimates) need `ANTHROPIC_API_KEY` set
 for `npm start`. Without it, the app shows a "not configured" state.
 
+## Accounts and sync (Supabase)
+
+Sign-in uses Supabase Auth (email + password). Every local change is recorded and
+synced to `public.sync_rows` (one row per record, newest edit wins), so the same
+account sees the same data on phone and PC. The app still works offline and catches up
+when it reconnects. Row-level security limits each account to its own rows. Progress
+photos stay on the device they were taken on.
+
+The project URL and publishable key live in `src/sync/supabase.ts` (override with
+`VITE_SUPABASE_URL` / `VITE_SUPABASE_KEY`). Schema:
+
+```sql
+create table public.sync_rows (
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  tbl text not null, pk text not null, data jsonb,
+  deleted boolean not null default false,
+  updated_at timestamptz not null default clock_timestamp(),   -- bumped by trigger on every write
+  primary key (user_id, tbl, pk)
+);
+-- RLS on; select/insert/update/delete only where auth.uid() = user_id; added to supabase_realtime.
+```
+
 ## Deploy to GitHub Pages
 
 `.github/workflows/pages.yml` builds and publishes on every push to `main` or

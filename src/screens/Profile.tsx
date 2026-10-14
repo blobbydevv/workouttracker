@@ -1,6 +1,10 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useState } from "react";
 import { Confirm, Header, Loading, NumberInput, Toggle, Unverified } from "../components/ui";
+import { sync } from "../sync";
+import type { SyncStatus } from "../sync/engine";
+import { signOut } from "../sync/AccountGate";
+import { supabase } from "../sync/supabase";
 import { db } from "../db/db";
 import { today } from "../domain/dates";
 import { currentTarget } from "../domain/checkin";
@@ -21,7 +25,6 @@ export default function Profile() {
   const [theme, setTheme] = useState<Theme>(() => {
     try { return (localStorage.getItem("theme") as Theme) ?? "system"; } catch { return "system"; }
   });
-  const [wipe, setWipe] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   useEffect(() => {
     if (target && !t) setT({ calories: target.calories, protein: target.protein, carbs: target.carbs, fat: target.fat });
@@ -138,13 +141,50 @@ export default function Profile() {
         ))}
       </section>
 
+      <AccountCard />
+
       <section className="card">
         <h2>Data</h2>
         <button className="btn block secondary" onClick={exportData}>Export my data (JSON)</button>
-        <button className="btn block danger" style={{ marginTop: 8 }} onClick={() => setWipe(true)}>Delete all data on this device</button>
-        <p className="faint">Development control. Not part of the reference app: its support site says progress can't be reset.</p>
       </section>
-      <Confirm open={wipe} title="Delete everything?" body="This erases all workouts, food logs, weigh-ins, photos and chats on this device." confirmLabel="Delete all data" danger onClose={() => setWipe(false)} onConfirm={async () => { await db.delete(); location.href = import.meta.env.BASE_URL; }} />
     </div>
+  );
+}
+
+function AccountCard() {
+  const [email, setEmail] = useState<string | null>(null);
+  const [status, setStatus] = useState<SyncStatus>(sync.status);
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    supabase().auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+    return sync.subscribe(setStatus);
+  }, []);
+  const label =
+    status.state === "syncing" ? "Syncing…"
+    : status.state === "offline" ? `Offline — ${status.pending} change${status.pending === 1 ? "" : "s"} will sync when you reconnect`
+    : status.state === "error" ? `Sync problem: ${status.error ?? "unknown error"}`
+    : status.pending ? `${status.pending} change${status.pending === 1 ? "" : "s"} waiting to sync`
+    : status.lastSyncedAt ? `Synced ${new Date(status.lastSyncedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+    : "Synced";
+  return (
+    <section className="card" aria-label="Account">
+      <h2>Account</h2>
+      <div className="row between"><span>Signed in as</span><strong className="ellipsis" style={{ maxWidth: "60%" }}>{email ?? "…"}</strong></div>
+      <div className="row between" style={{ marginTop: 6 }}>
+        <span className={status.state === "error" ? "" : "faint"} style={status.state === "error" ? { color: "var(--danger)" } : undefined} role="status" data-testid="sync-status">{label}</span>
+        <button className="btn ghost small" disabled={status.state === "syncing"} onClick={() => sync.syncNow()}>Sync now</button>
+      </div>
+      <p className="faint">Your workouts, food logs, weigh-ins and settings sync to this account on every device. Progress photos stay on the device they were taken on.</p>
+      <button className="btn block secondary" disabled={busy} onClick={() => setConfirm(true)}>Sign out</button>
+      <Confirm
+        open={confirm}
+        title="Sign out?"
+        body="Anything not yet synced is uploaded first, then this account's data is removed from this device. It stays in your account."
+        confirmLabel="Sign out"
+        onClose={() => setConfirm(false)}
+        onConfirm={async () => { setBusy(true); await signOut(); }}
+      />
+    </section>
   );
 }

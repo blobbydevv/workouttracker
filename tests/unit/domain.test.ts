@@ -149,3 +149,21 @@ describe("nutrition totals", () => {
     expect(t).toEqual({ kcal: 250, protein: 20, carbs: 20, fat: 4 });
   });
 });
+
+describe("exercise progress", () => {
+  it("takes the heaviest working set per workout, oldest first, ignoring warmups", async () => {
+    const { exerciseProgress } = await import("../../src/domain/workout");
+    const { niceTicks } = await import("../../src/components/ProgressChart");
+    const s = (id: string, date: string) => ({ id, date, weekStart: date, templateId: "t", name: "W", items: [], status: "completed" as const, startedAt: 0 });
+    const set = (sessionId: string, weight: number, reps: number, type: "normal" | "warmup" = "normal") => ({ sessionId, itemId: "i", exerciseId: "bench", index: 0, type, weight, reps, done: true });
+    const p = exerciseProgress([
+      { session: s("b", "2026-10-08"), sets: [set("b", 40, 12, "warmup"), set("b", 62.5, 8), set("b", 62.5, 9), set("b", 60, 10)] },
+      { session: s("a", "2026-10-01"), sets: [set("a", 60, 8), set("a", 60, 7)] },
+    ]);
+    expect(p.map((x) => [x.date, x.topWeight, x.topReps, x.totalReps])).toEqual([
+      ["2026-10-01", 60, 8, 15],
+      ["2026-10-08", 62.5, 9, 27],
+    ]);
+    expect(niceTicks(60, 62.5)).toEqual([60, 61, 62, 63]);
+  });
+});

@@ -275,3 +275,22 @@ textarea.input { padding: 10px 12px; min-height: 80px; resize: vertical; }
 .offline-banner { background: var(--warn); color: #fff; text-align: center; font-size: 13px; padding: 4px; position: sticky; top: 0; z-index: 50; }
 video.scanner { width: 100%; border-radius: var(--radius); background: #000; aspect-ratio: 3/4; object-fit: cover; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* Exercise progress charts (single series: title names it, no legend) */
+.pchart-title { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+.pchart-latest { color: var(--text-2); font-weight: 400; }
+.pchart-latest strong { color: var(--text); font-size: 18px; font-weight: 700; }
+.pchart-plot { position: relative; touch-action: pan-y; border-radius: 8px; outline-offset: 2px; }
+.pchart-plot svg { display: block; overflow: visible; }
+.pc-grid { stroke: var(--line); stroke-width: 1; }
+.pc-axis { fill: var(--text-3); font-size: 11px; font-variant-numeric: tabular-nums; }
+.pc-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.pc-dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.pc-dot.on { stroke-width: 2.5; }
+.pc-cross { stroke: var(--text-3); stroke-width: 1; stroke-dasharray: 3 3; }
+.pc-label { fill: var(--text); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pc-tip { position: absolute; transform: translate(-50%, -100%); margin-top: -6px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 8px; padding: 6px 10px; display: flex; flex-direction: column; align-items: center; pointer-events: none; white-space: nowrap; font-size: 12px; color: var(--text-2); z-index: 2; }
+.pc-tip strong { color: var(--text); font-size: 15px; }
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat-row > div { background: var(--surface-2); border-radius: 10px; padding: 10px; }
+.stat-row b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }

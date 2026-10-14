@@ -204,3 +204,35 @@ export function personalRecords(rows: ExerciseHistoryRow[]) {
     }
   return { heaviest, best1rm, mostReps };
 }
+
+export interface ProgressEntry {
+  date: string;
+  sessionId: string;
+  topWeight: number; // kg, heaviest working set
+  topReps: number; // reps on that heaviest set
+  totalReps: number; // all working-set reps that session
+  bestE1rm: number;
+}
+
+/**
+ * One entry per workout for an exercise, oldest first. Warmups and sets
+ * without weight/reps are ignored. The "top set" is the heaviest working
+ * set (ties: more reps).
+ */
+export function exerciseProgress(rows: ExerciseHistoryRow[]): ProgressEntry[] {
+  const out: ProgressEntry[] = [];
+  for (const r of rows) {
+    const work = r.sets.filter((s) => s.type !== "warmup" && s.weight != null && s.reps != null && s.reps > 0);
+    if (!work.length) continue;
+    const top = work.reduce((a, s) => (s.weight! > a.weight! || (s.weight === a.weight && s.reps! > a.reps!) ? s : a));
+    out.push({
+      date: r.session.date,
+      sessionId: r.session.id,
+      topWeight: top.weight!,
+      topReps: top.reps!,
+      totalReps: work.reduce((a, s) => a + s.reps!, 0),
+      bestE1rm: Math.max(...work.map((s) => e1rm(s.weight!, s.reps!))),
+    });
+  }
+  return out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+}

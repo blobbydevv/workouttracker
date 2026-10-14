@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, signUp, test } from "./fixtures";
 
 const SHOTS = "docs/screenshots";
 const tab = (page: Page, name: string) => page.getByRole("navigation", { name: "Main" }).getByRole("link", { name });
@@ -8,7 +9,7 @@ function localISO(d = new Date()) {
 }
 
 async function onboard(page: Page) {
-  await page.goto("/");
+  await signUp(page);
   await expect(page).toHaveURL(/onboarding/);
   await page.getByRole("button", { name: "Build muscle", exact: true }).click();
   await page.getByRole("button", { name: "Continue" }).click();
@@ -50,8 +51,6 @@ test.beforeEach(async ({ page }) => {
   // HOSTILE_HISTORY=1 reruns every journey under a throwing history wrapper (as Netlify's toolbar injects).
   if (process.env.HOSTILE_HISTORY)
     await page.addInitScript(`let l; for (const m of ["pushState","replaceState"]) { const o = history[m]; history[m] = function (...a) { const r = o.apply(this, a); l(m, a); return r; }; }`);
-  await page.goto("/");
-  await page.evaluate(() => new Promise<void>((r) => { const req = indexedDB.deleteDatabase("tracker"); req.onsuccess = req.onerror = req.onblocked = () => r(); }));
 });
 
 test("onboarding → first workout → interruption → resume → completion → history edit updates PRs", async ({ page }) => {

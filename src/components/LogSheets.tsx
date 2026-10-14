@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { db } from "../db/db";
 import type { ISODate, Units } from "../db/types";
 import { longDate, today } from "../domain/dates";
@@ -9,11 +9,16 @@ export function WeighInSheet({ open, onClose, date, units }: { open: boolean; on
   const [d, setD] = useState(date);
   const [v, setV] = useState<number | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const touched = useRef(false);
   useEffect(() => {
     if (!open) return;
     setD(date);
     setErr(null);
-    db.weighins.where("date").equals(date).last().then((w) => setV(toDisplay(w?.weightKg, units)));
+    touched.current = false;
+    // Prefill with that day's weigh-in, unless the user has already started typing.
+    db.weighins.where("date").equals(date).last().then((w) => {
+      if (!touched.current) setV(toDisplay(w?.weightKg, units));
+    });
   }, [open, date, units]);
   async function save() {
     const kg = fromDisplay(v, units);
@@ -35,7 +40,7 @@ export function WeighInSheet({ open, onClose, date, units }: { open: boolean; on
       <div className="field">
         <label>Weight ({units})</label>
         <div className="input" style={{ padding: 0 }}>
-          <NumberInput label={`Weight in ${units}`} value={v} onChange={setV} placeholder="0.0" />
+          <NumberInput label={`Weight in ${units}`} value={v} onChange={(x) => { touched.current = true; setV(x); }} placeholder="0.0" />
         </div>
       </div>
       {err && <div className="notice error" role="alert">{err}</div>}
