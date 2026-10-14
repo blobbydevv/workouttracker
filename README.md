@@ -24,6 +24,13 @@ npm run e2e          # journey tests (Playwright, 390×844)
 AI features (the coach, meal-photo and text food estimates) need `ANTHROPIC_API_KEY` set
 for `npm start`. Without it, the app shows a "not configured" state.
 
+## Deploy to Netlify
+
+`netlify.toml` sets everything: build `npm run build`, publish `dist`, and Node 22.
+`public/_redirects` sends every app route (e.g. `/onboarding`) to `index.html`.
+`netlify/functions/api.mjs` serves `/api/*`. To turn on the AI coach and food estimates, add
+`ANTHROPIC_API_KEY` under Site configuration → Environment variables and redeploy.
+
 ## Layout
 
 - `src/db`: Dexie schema (`types.ts` is the full persistent data model) and generic seed content

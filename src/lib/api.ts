@@ -22,6 +22,9 @@ async function post<T>(path: string, body: unknown, signal?: AbortSignal): Promi
     if ((e as Error).name === "AbortError") throw e;
     throw new ApiError("Couldn't reach the AI service. Check that the app server is running.", "unreachable");
   }
+  // A host without the API (e.g. a static deploy) answers with HTML, not JSON.
+  if (!(res.headers.get("content-type") ?? "").includes("application/json"))
+    throw new ApiError("AI features aren't available on this deployment.", "not_configured");
   const data = await res.json().catch(() => ({}));
   if (res.status === 503) throw new ApiError(data.error ?? "The AI service isn't configured on this server.", "not_configured");
   if (res.status === 422) throw new ApiError(data.error ?? "The request was declined.", "refused");
