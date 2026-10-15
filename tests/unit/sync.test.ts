@@ -107,3 +107,19 @@ describe("sync engine", () => {
     expect((await b.db.weighins.toArray()).map((w) => w.weightKg)).toEqual([81]);
   });
 });
+
+describe("sync apply", () => {
+  it("skips identical rows (even with different key order) so live queries don't churn", async () => {
+    const backend = new MemoryBackend();
+    const a = device(backend);
+    await a.db.steps.put({ date: "2026-10-14", steps: 5000, source: "manual" });
+    await a.engine.syncNow(); // nothing pending locally, so remote rows apply
+    let writes = 0;
+    a.db.steps.hook("updating", () => { writes++; });
+    a.db.steps.hook("creating", () => { writes++; });
+    await a.engine.apply([{ tbl: "steps", pk: "2026-10-14", deleted: false, data: { steps: 5000, source: "manual", date: "2026-10-14" } }]);
+    expect(writes).toBe(0);
+    await a.engine.apply([{ tbl: "steps", pk: "2026-10-14", deleted: false, data: { steps: 6000, source: "manual", date: "2026-10-14" } }]);
+    expect(writes).toBe(1);
+  });
+});

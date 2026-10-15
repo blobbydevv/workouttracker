@@ -9,6 +9,7 @@ import { addDays, longDate, today } from "../domain/dates";
 import { currentTarget } from "../domain/checkin";
 import { SLOTS, SLOT_LABEL, bySlot, entryMacros, sumEntries } from "../domain/nutrition";
 import { useProfile } from "../lib/hooks";
+import { DIET_PLANS } from "../db/diets";
 
 export default function Nutrition() {
   const profile = useProfile();
@@ -44,6 +45,7 @@ export default function Nutrition() {
     <div className="screen">
       <header className="header">
         <h1>Food Log</h1>
+        <Link className="icon-btn" to="/nutrition/plans" aria-label="Diet plans"><Icon name="book" /></Link>
         <Link className="icon-btn" to="/nutrition/checkin" aria-label="Nutrition Check-In"><Icon name="scale" /></Link>
         <button className="icon-btn" aria-label="Food Log settings" onClick={() => setGear(true)}><Icon name="gear" /></button>
       </header>
@@ -54,6 +56,14 @@ export default function Nutrition() {
         <button className="icon-btn" aria-label="Next day" onClick={() => setDate(addDays(date, 1))}><Icon name="chevron" /></button>
       </div>
 
+      <Link to="/nutrition/plans" className="card row" style={{ color: "inherit", textDecoration: "none", padding: "10px 14px" }}>
+        <Icon name="book" />
+        <div className="grow">
+          <div style={{ fontWeight: 600 }}>{profile.dietPlanId ? `Diet plan: ${DIET_PLANS.find((d) => d.id === profile.dietPlanId)?.name ?? "Custom"}` : "Choose a diet plan"}</div>
+          <div className="faint">Lean bulk, cut, keto, high-protein and more</div>
+        </div>
+        <Icon name="chevron" size={18} />
+      </Link>
       <section className="card" aria-label="Daily totals">
         <div className="row between">
           <div>

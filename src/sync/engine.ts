@@ -180,16 +180,20 @@ export class SyncEngine {
     const known = new Set<string>(SYNCED_TABLES);
     const tables = [...new Set(rows.map((r) => r.tbl))].filter((t) => known.has(t)).map((t) => this.db.table(t));
     if (!tables.length) return;
-    await this.db.transaction("rw", tables, (tx) => {
+    await this.db.transaction("rw", tables, async (tx) => {
       (tx as unknown as Record<string, unknown>)[REMOTE] = true;
-      return Promise.all(
-        rows
-          .filter((r) => known.has(r.tbl) && !this.outbox.has(`${r.tbl}\u0000${r.pk}`))
-          .map((r) => {
-            const table = this.db.table(r.tbl);
-            return r.deleted || r.data == null ? table.delete(this.typedKey(table, r.pk)) : table.put(r.data);
-          }),
-      );
+      for (const r of rows) {
+        if (!known.has(r.tbl) || this.outbox.has(`${r.tbl}\u0000${r.pk}`)) continue;
+        const table = this.db.table(r.tbl);
+        const key = this.typedKey(table, r.pk);
+        const local = await table.get(key);
+        // Skip no-op writes: re-applying identical rows would wake every live query.
+        if (r.deleted || r.data == null) {
+          if (local !== undefined) await table.delete(key);
+        } else if (local === undefined || stableJson(local) !== stableJson(r.data)) {
+          await table.put(r.data);
+        }
+      }
     });
   }
 
@@ -264,6 +268,13 @@ export class SyncEngine {
       /* storage full or blocked: changes still sync this session */
     }
   }
+}
+
+/** JSON with sorted keys (Postgres jsonb doesn't keep key order). */
+export function stableJson(v: unknown): string {
+  return JSON.stringify(v, (_k, val) =>
+    val && typeof val === "object" && !Array.isArray(val) ? Object.fromEntries(Object.entries(val).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) : val,
+  );
 }
 
 function safeStorage(): Storage | null {

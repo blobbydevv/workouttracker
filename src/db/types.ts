@@ -21,6 +21,8 @@ export interface Profile {
   /** Food Log gear-menu setting: show carbohydrate and fat per meal. */
   showCarbsFats: boolean;
   weighInReminder: boolean;
+  workoutPlanId?: string;
+  dietPlanId?: string;
   onboardedAt?: number;
   createdAt: number;
 }

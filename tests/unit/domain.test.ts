@@ -105,10 +105,11 @@ describe("check-in", () => {
       1,
     );
     const { db } = await import("../../src/db/db");
-    const d = "2026-10-14";
+    const { today } = await import("../../src/domain/dates");
+    const d = today();
     await db.weighins.bulkAdd([
-      { date: "2026-10-02", weightKg: 81, createdAt: 0 },
-      { date: "2026-10-10", weightKg: 80, createdAt: 0 },
+      { date: addDays(d, -12), weightKg: 81, createdAt: 0 },
+      { date: addDays(d, -4), weightKg: 80, createdAt: 0 },
     ]);
     const s = await summarize(d, -0.5);
     expect(s.ratePctPerWeek).not.toBeNull();
@@ -165,5 +166,43 @@ describe("exercise progress", () => {
       ["2026-10-08", 62.5, 9, 27],
     ]);
     expect(niceTicks(60, 62.5)).toEqual([60, 61, 62, 63]);
+  });
+});
+
+describe("plan libraries", () => {
+  it("every workout plan uses real exercises, a valid week and consecutive supersets", async () => {
+    const { WORKOUT_PLANS } = await import("../../src/db/programs");
+    const { SEED_EXERCISES } = await import("../../src/db/seed");
+    const ids = new Set(SEED_EXERCISES.map((e) => e.id));
+    expect(WORKOUT_PLANS.length).toBeGreaterThanOrEqual(10);
+    for (const p of WORKOUT_PLANS) {
+      expect(p.week).toHaveLength(7);
+      expect(p.week.filter(Boolean)).toHaveLength(p.daysPerWeek);
+      for (const k of p.week) if (k) expect(p.days[k], `${p.id}.${k}`).toBeTruthy();
+      for (const [key, d] of Object.entries(p.days)) {
+        for (const [ex, sets, lo, hi] of d.items) {
+          expect(ids.has(ex), `${p.id}/${key}: ${ex}`).toBe(true);
+          expect(sets).toBeGreaterThan(0);
+          expect(lo).toBeLessThanOrEqual(hi);
+        }
+        // Superset members must be next to each other to group on screen.
+        const ss = d.items.map((i) => i[4]);
+        ss.forEach((g, i) => { if (g && ss.indexOf(g) !== i) expect(ss[i - 1], `${p.id}/${key}`).toBe(g); });
+      }
+    }
+  });
+  it("diet targets add up and respect a safe minimum", async () => {
+    const { DIET_PLANS, dietTargets } = await import("../../src/db/diets");
+    expect(DIET_PLANS.length).toBeGreaterThanOrEqual(10);
+    const body = { sex: "male" as const, age: 30, heightCm: 180, weightKg: 80, activity: "light" as const };
+    for (const d of DIET_PLANS) {
+      const t = dietTargets(d, body);
+      expect(Math.abs(t.protein * 4 + t.carbs * 4 + t.fat * 9 - t.calories)).toBeLessThan(15);
+      expect(t.calories).toBeGreaterThanOrEqual(1500);
+    }
+    const keto = dietTargets(DIET_PLANS.find((d) => d.id === "keto")!, body);
+    expect(keto.carbs).toBe(40);
+    const bulk = dietTargets(DIET_PLANS.find((d) => d.id === "lean-bulk")!, body);
+    expect(bulk.calories).toBeGreaterThan(bulk.maintenance);
   });
 });

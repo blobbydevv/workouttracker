@@ -37,6 +37,7 @@ async function onboard(page: Page) {
 async function startTodaysWorkout(page: Page) {
   await tab(page, "Workout").click();
   const row = page.locator(`[data-date="${localISO()}"]`);
+  await row.waitFor(); // schedule loaded before deciding rest vs workout
   if (await row.getByText("Rest", { exact: true }).isVisible()) {
     await row.getByText("Tap to add a workout").click();
     await page.getByRole("dialog").locator(".list-item").first().click();
@@ -203,7 +204,7 @@ test("schedule edits: delete to library, add back, future weeks blocked", async 
   await page.getByRole("button", { name: "Next month" }).click();
   await page.screenshot({ path: `${SHOTS}/calendar-expanded.png` });
   await page.locator(".day:has(.dot.planned)").last().click();
-  await page.getByRole("region", { name: "Daily checklist" }).locator("button.list-item").first().click();
+  await page.getByRole("region", { name: "Daily checklist" }).locator("button.list-item").filter({ hasText: /exercises/ }).click();
   await expect(page.getByText("Not available yet")).toBeVisible();
 });
 

@@ -24,7 +24,10 @@ export function provisionalTargets(a: Pick<Assessment, "sex" | "age" | "heightCm
 }
 
 export async function ensureSeeded(): Promise<void> {
-  if ((await db.exercises.count()) === 0) await db.exercises.bulkPut(SEED_EXERCISES);
+  // Add any built-in exercises this device doesn't have yet (new ones ship with updates).
+  const have = new Set(await db.exercises.toCollection().primaryKeys());
+  const missing = SEED_EXERCISES.filter((e) => !have.has(e.id));
+  if (missing.length) await db.exercises.bulkPut(missing);
   if ((await db.foods.filter((f) => !f.custom).count()) === 0) await db.foods.bulkPut(SEED_FOODS);
   if (!(await db.entitlements.get("membership"))) {
     await db.entitlements.put({

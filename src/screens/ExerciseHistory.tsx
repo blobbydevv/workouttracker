@@ -1,13 +1,14 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ProgressChart } from "../components/ProgressChart";
 import { ExerciseHero } from "../components/ExerciseImage";
 import { Header, Loading, NumberInput, Segmented, Sheet, fmt } from "../components/ui";
 import { db } from "../db/db";
 import type { SetRecord } from "../db/types";
 import { addDays, longDate, today } from "../domain/dates";
-import { e1rm, exerciseHistory, exerciseProgress, personalRecords } from "../domain/workout";
+import { activeSession, e1rm, exerciseHistory, exerciseProgress, personalRecords } from "../domain/workout";
+import { addExerciseToSession, startQuickWorkout } from "../domain/plans";
 import { fromDisplay, toDisplay, useProfile } from "../lib/hooks";
 
 type Range = "1m" | "3m" | "6m" | "1y" | "all";
@@ -16,6 +17,7 @@ const RANGE_DAYS: Record<Range, number | null> = { "1m": 30, "3m": 91, "6m": 182
 /** Progress graphs plus editable history; everything is derived from stored sets, so edits update it. */
 export default function ExerciseHistory() {
   const { id } = useParams();
+  const nav = useNavigate();
   const profile = useProfile();
   const data = useLiveQuery(async () => ({ ex: await db.exercises.get(id!), rows: await exerciseHistory(id!) }), [id]);
   const [edit, setEdit] = useState<SetRecord | null>(null);
@@ -33,6 +35,23 @@ export default function ExerciseHistory() {
     <div className="screen">
       <Header title={data.ex?.name ?? "Exercise"} back />
       {data.ex && <ExerciseHero id={data.ex.id} name={data.ex.name} />}
+      {data.ex && (
+        <button
+          className="btn block"
+          style={{ marginBottom: 12 }}
+          onClick={async () => {
+            const active = await activeSession();
+            if (active) {
+              if (!active.items.some((i) => i.exerciseId === data.ex!.id)) await addExerciseToSession(active.id, data.ex!);
+              return nav(`/session/${active.id}`);
+            }
+            const s = await startQuickWorkout(profile.weekStartsOn, data.ex!);
+            nav(`/session/${s.id}`);
+          }}
+        >
+          Log this exercise now
+        </button>
+      )}
       {data.rows.length > 0 && (
         <>
           <Segmented label="Time range" value={range} onChange={setRange} options={[["1m", "1M"], ["3m", "3M"], ["6m", "6M"], ["1y", "1Y"], ["all", "All"]]} />

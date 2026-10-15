@@ -1,6 +1,6 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ExercisePicker } from "../components/ExercisePicker";
 import { ExerciseThumb } from "../components/ExerciseImage";
 import { Icon } from "../components/Icon";
@@ -31,6 +31,7 @@ import {
   updateSet,
 } from "../domain/workout";
 import { mmss, requestNotifications, restDoneAlert } from "../lib/alerts";
+import { addExerciseToSession } from "../domain/plans";
 import { fromDisplay, toDisplay, useProfile } from "../lib/hooks";
 
 const SET_TYPE_LABEL: Record<SetType, string> = { normal: "", warmup: "W", dropset: "D", deload: "DL" };
@@ -63,6 +64,8 @@ export default function Session() {
   const [restInfo, setRestInfo] = useState<{ sec: number; overridden: boolean; defaultSec: number } | null>(null);
   const [confirm, setConfirm] = useState<"finish" | "discard" | null>(null);
   const alerted = useRef<number | null>(null);
+  const [params, setParams] = useSearchParams();
+  const [adding, setAdding] = useState(params.get("add") === "1");
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 500);
@@ -182,6 +185,9 @@ export default function Session() {
           </section>
         );
       })}
+
+      <button className="btn block secondary" style={{ marginBottom: 12 }} onClick={() => setAdding(true)}><Icon name="plus" />Add Exercise</button>
+      <ExercisePicker open={adding} onClose={() => { setAdding(false); if (params.get("add")) setParams({}, { replace: true }); }} title="Add Exercise" onPick={(e) => addExerciseToSession(s.id, e)} />
 
       {s.rest && restLeft > 0 && (
         <div className="rest-bar" role="timer" aria-label="Rest timer">

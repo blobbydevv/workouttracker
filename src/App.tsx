@@ -19,6 +19,8 @@ import Lessons from "./screens/Lessons";
 import Coach from "./screens/Coach";
 import Profile from "./screens/Profile";
 import TemplateEditor from "./screens/TemplateEditor";
+import WorkoutPlans, { WorkoutPlanDetail } from "./screens/WorkoutPlans";
+import DietPlans, { DietPlanDetail } from "./screens/DietPlans";
 
 // Tab order and labels are UNVERIFIED (no same-version recording). Support
 // articles name Dashboard, Workout and Nutrition; Progress placement is a guess.
@@ -30,7 +32,7 @@ const TABS = [
 ];
 
 // Tab bar is hidden on full-screen flows (active workout, camera/scanner, modal editors).
-const HIDE_TABBAR = [/^\/session\//, /^\/nutrition\/add/, /^\/nutrition\/meal/, /^\/nutrition\/food/, /^\/nutrition\/checkin/, /^\/coach/, /^\/onboarding/, /^\/workout\/template/];
+const HIDE_TABBAR = [/^\/session\//, /^\/nutrition\/add/, /^\/nutrition\/meal/, /^\/nutrition\/food/, /^\/nutrition\/checkin/, /^\/coach/, /^\/onboarding/, /^\/workout\/template/, /^\/workout\/plans\/./, /^\/nutrition\/plans\/./];
 
 export default function App() {
   const profile = useProfile();
@@ -54,6 +56,10 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/workout" element={<WorkoutTab />} />
         <Route path="/workout/library" element={<Library />} />
+        <Route path="/workout/plans" element={<WorkoutPlans />} />
+        <Route path="/workout/plans/:id" element={<WorkoutPlanDetail />} />
+        <Route path="/nutrition/plans" element={<DietPlans />} />
+        <Route path="/nutrition/plans/:id" element={<DietPlanDetail />} />
         <Route path="/workout/template/:id" element={<TemplateEditor />} />
         <Route path="/session/:id" element={<Session />} />
         <Route path="/nutrition" element={<Nutrition />} />

@@ -10,6 +10,8 @@ import { dayNum, dayShort, today, weekDays, weekStartOf } from "../domain/dates"
 import { PROGRAM_ID } from "../domain/onboarding";
 import { hasBackToBack, moveSlot, saveLayoutFrom, versionForWeek, type Slot } from "../domain/schedule";
 import { useProfile } from "../lib/hooks";
+import { startQuickWorkout } from "../domain/plans";
+import { activeSession } from "../domain/workout";
 
 export default function WorkoutTab() {
   const profile = useProfile();
@@ -37,11 +39,19 @@ export default function WorkoutTab() {
       const t = s.templateId ? byId.get(s.templateId) : undefined;
       return t ? new Set(t.items.map((i) => exercises.get(i.exerciseId)?.muscle ?? "")) : null;
     });
-    return { slots, templates, byId, sessions, conflicts: hasBackToBack(muscles) };
+    const planName = (await db.programs.get(PROGRAM_ID))?.name;
+    return { slots, templates, byId, sessions, conflicts: hasBackToBack(muscles), planName: planName === "My Program" ? null : planName };
   }, [weekStart]);
 
   if (!profile || !data) return <Loading />;
   const days = weekDays(weekStart);
+
+  async function quickLog() {
+    const active = await activeSession();
+    if (active) return nav(`/session/${active.id}`);
+    const s = await startQuickWorkout(wso);
+    nav(`/session/${s.id}?add=1`);
+  }
 
   const save = (slots: Slot[]) => saveLayoutFrom(PROGRAM_ID, weekStart, slots);
   const scheduledIds = new Set(data.slots.map((s) => s.templateId).filter(Boolean) as string[]);
@@ -97,6 +107,11 @@ export default function WorkoutTab() {
         <h1>Workout</h1>
         <Link className="icon-btn" to="/workout/library" aria-label="Workout Library"><Icon name="library" /></Link>
       </header>
+      <div className="row" style={{ gap: 8, marginBottom: 14 }}>
+        <Link to="/workout/plans" className="btn secondary grow" style={{ textDecoration: "none" }}><Icon name="book" />Workout plans</Link>
+        <button className="btn grow" onClick={quickLog}><Icon name="plus" />Quick log</button>
+      </div>
+      {data.planName && <p className="faint" style={{ margin: "0 4px 6px" }}>Current plan: <strong>{data.planName}</strong></p>}
       <div className="row between" style={{ margin: "4px 4px 8px" }}>
         <strong>This Week's Schedule</strong>
         <button className="icon-btn" aria-label="Schedule options" onClick={() => setWeekMenu(true)}><Icon name="more" /></button>

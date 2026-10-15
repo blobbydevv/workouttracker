@@ -21,6 +21,7 @@ async function quickOnboard(page: Page, name: string) {
 async function logOneSet(page: Page, weight: string, reps: string) {
   await tab(page, "Workout").click();
   const row = page.locator(`[data-date="${localISO()}"]`);
+  await row.waitFor(); // schedule loaded before deciding rest vs workout
   if (await row.getByText("Rest", { exact: true }).isVisible()) {
     await row.getByText("Tap to add a workout").click();
     await page.getByRole("dialog").locator(".list-item").first().click();
@@ -149,6 +150,7 @@ test("graphs are reachable from the workout screen and Lifts lists every planned
 
   await tab(page, "Workout").click();
   const row = page.locator(`[data-date="${localISO()}"]`);
+  await row.waitFor(); // schedule loaded before deciding rest vs workout
   if (await row.getByText("Rest", { exact: true }).isVisible()) {
     await row.getByText("Tap to add a workout").click();
     await page.getByRole("dialog").locator(".list-item").first().click();
