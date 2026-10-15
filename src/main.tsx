@@ -9,6 +9,7 @@ import { applyTheme } from "./screens/Profile";
 import { installHistoryGuard } from "./lib/historyGuard";
 import "./sync"; // installs change tracking before anything writes to the database
 import { AccountGate } from "./sync/AccountGate";
+import { UpdateBanner } from "./components/UpdateBanner";
 
 installHistoryGuard();
 
@@ -26,6 +27,7 @@ ensureSeeded()
     root.render(
       <StrictMode>
         <ErrorBoundary>
+          <UpdateBanner />
           <AccountGate>
             <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
               <App />

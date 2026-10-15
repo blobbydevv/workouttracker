@@ -1,7 +1,7 @@
 // Offline shell. Navigations: network first, falling back to the cached app shell.
 // Assets: cache first. Only successful responses are cached, so a host error page
 // can never replace the app. Data lives in IndexedDB, so logging works offline.
-const CACHE = "shell-v3";
+const CACHE = "shell-v4";
 // Paths are relative to the worker scope so the app works in a subfolder (GitHub Pages).
 const BASE = new URL("./", self.location).pathname;
 const SHELL = BASE + "index.html";
@@ -19,7 +19,7 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
-  if (e.request.method !== "GET" || url.origin !== location.origin || url.pathname.startsWith(BASE + "api/")) return;
+  if (e.request.method !== "GET" || url.origin !== location.origin || url.pathname.startsWith(BASE + "api/") || url.pathname === BASE + "version.json") return; // never cache the update check
   if (e.request.mode === "navigate") {
     e.respondWith(
       fetch(e.request)
